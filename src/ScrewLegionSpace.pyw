@@ -69,8 +69,8 @@ def read_config() -> tuple[bool, float, str, bool, str]:
 # Main Functiions
 # ------------------------------------------------------------------------
 def run_process_check() -> None:
+    logging.info(f"Process scanning thread started successfully!")
     while not stop_event.is_set():
-        logging.info(f"Process scanning thread started successfully!")
         if not CONFIG_PATH.is_file():
             create_config()
             logging.info(f"No Configuration file found! New Configuration file created at: {CONFIG_PATH}")
@@ -102,6 +102,11 @@ def run_at_startup(icon, _) -> None:
     subprocess.run(cmd, shell=True)
     logging.info(f"[Tray Icon] Set executable to run on boot: {CURRENT_EXE_PATH}")
     
+def stop_run_at_startup(icon, _) -> None:
+    cmd: str = (f'powershell -Command "Start-Process schtasks -ArgumentList \'/delete /tn \"ScrewLegionSpace\" /f\' -Verb RunAs"')
+    subprocess.run(cmd, shell=True)
+    logging.info(f"[Tray Icon] Stop executable from running on boot: {CURRENT_EXE_PATH}")
+    
 def exit_program(icon, _) -> None:
     logging.info(f"[Tray Icon] Exitting program!")
     stop_event.set()
@@ -116,7 +121,7 @@ if __name__ == "__main__":
         image: Image = Image.open(icon_path)
     else:
         image: Image = Image.new("RGB", (32, 32), (79, 81, 175))
-    menu = Menu(MenuItem("Open Configuration File", open_config_file), MenuItem("Run Program at Startup", run_at_startup), MenuItem("Quit Program", exit_program))
+    menu = Menu(MenuItem("Open Configuration File", open_config_file), MenuItem("Run Program at Startup", run_at_startup), MenuItem("Stop Program at Startup", stop_run_at_startup), MenuItem("Quit Program", exit_program))
     icon = Icon("icon", image, "ScrewLegionSpace", menu)
     
     stop_event = threading.Event()
